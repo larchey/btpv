@@ -1,0 +1,29 @@
+# systemd/btpv.service
+[Unit]
+Description=Baby Turtle Password Vault Server
+After=network.target postgresql.service
+Requires=postgresql.service
+
+[Service]
+Type=simple
+User=btpv
+Group=btpv
+ExecStart=/usr/bin/btpv_server
+WorkingDirectory=/var/lib/btpv
+StandardOutput=append:/var/log/btpv/btpv.log
+StandardError=append:/var/log/btpv/btpv.error.log
+
+# Security settings
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+NoNewPrivileges=yes
+CapabilityBoundingSet=
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectControlGroups=yes
+RestrictAddressFamilies=AF_INET AF_INET6
+RestrictNamespaces=yes
+
+[Install]
+WantedBy=multi-user.target
