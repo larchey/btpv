@@ -1,30 +1,53 @@
-#btpv
-
 btpv/
-├── CMakeLists.txt                 # Main build configuration
+├── CMakeLists.txt
 ├── src/
-│   ├── main.cpp                   # Main application entry
-│   ├── models/
-│   │   ├── user.hpp
-│   │   ├── group.hpp
-│   │   ├── password.hpp
-│   │   └── group_member.hpp
-│   ├── crypto/
-│   │   ├── encryption.hpp
-│   │   └── encryption.cpp
-│   ├── auth/
-│   │   ├── authentication.hpp
-│   │   └── authentication.cpp
-│   └── db/
-│       ├── database.hpp
-│       ├── database.cpp
-│       ├── migrations.hpp
-│       └── migrations.cpp
+│   ├── backend/
+│   │   ├── main.cpp *
+│   │   ├── api/
+│   │   │   ├── controller.hpp *
+│   │   │   └── controller.cpp *
+│   │   ├── models/
+│   │   │   ├── user.hpp *
+│   │   │   ├── group.hpp *
+│   │   │   ├── password.hpp *
+│   │   │   └── group_member.hpp *
+│   │   ├── crypto/
+│   │   │   ├── encryption.hpp *
+│   │   │   └── encryption.cpp *
+│   │   ├── auth/
+│   │   │   ├── authentication.hpp *
+│   │   │   └── authentication.cpp *
+│   │   └── db/
+│   │       ├── database.hpp *
+│   │       ├── database.cpp *
+│   │       ├── migrations.hpp *
+│   │       └── migrations.cpp *
+│   └── frontend/
+│       ├── index.html
+│       ├── css/
+│       │   └── styles.css
+│       ├── js/
+│       │   ├── app.js
+│       │   ├── auth.js
+│       │   └── api.js
+│       └── assets/
+│           └── images/
 ├── config/
-│   └── btpv.conf                  # Application configuration
+│   ├── btpv.conf *
+│   ├── nginx.conf
+│   └── systemd/
+│       └── btpv.service *
 ├── scripts/
-│   └── post_install.sh           # RPM post-installation script
-├── systemd/
-│   └── btpv.service              # Systemd service definition
-└── tests/                        # Test directory
-    └── ...                       # Test files
+│   ├── setup/
+│   │   ├── install.sh
+│   │   ├── configure_nginx.sh
+│   │   ├── configure_postgres.sh
+│   │   └── generate_certificates.sh
+│   └── rpm/
+│       ├── btpv.spec
+│       └── rpmbuild.sh
+├── packaging/
+│   ├── rpm/
+│   │   └── btpv.spec          # RPM spec file
+│   └── systemd/
+│       └── btpv.service       # Systemd service file

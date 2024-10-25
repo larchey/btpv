@@ -3,7 +3,6 @@
 
 #include <string>
 #include <vector>
-
 #include <pqxx/pqxx>
 
 namespace btpv {
@@ -114,11 +113,33 @@ private:
                 expires_at TIMESTAMP WITH TIME ZONE NOT NULL,
                 last_activity TIMESTAMP WITH TIME ZONE,
                 ip_address INET,
-                user_agent TEXT
+                user_agent TEXT,
+                CONSTRAINT unique_token_hash UNIQUE (token_hash)
             );
 
+            -- Rate limiting table
+            CREATE TABLE rate_limits (
+                id BIGSERIAL PRIMARY KEY,
+                key VARCHAR(255) NOT NULL,
+                timestamp TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+            );
+
+            -- Session backup codes for MFA recovery
+            CREATE TABLE mfa_backup_codes (
+                user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+                code_hash VARCHAR(255) NOT NULL,
+                used BOOLEAN DEFAULT FALSE,
+                created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+                used_at TIMESTAMP WITH TIME ZONE,
+                PRIMARY KEY (user_id, code_hash)
+            );
+
+            -- Indexes for session management
+            CREATE INDEX idx_sessions_user ON sessions(user_id);
             CREATE INDEX idx_sessions_token_hash ON sessions(token_hash);
             CREATE INDEX idx_sessions_expires ON sessions(expires_at);
+            CREATE INDEX idx_rate_limits_key_timestamp ON rate_limits(key, timestamp);
+            CREATE INDEX idx_backup_codes_user ON mfa_backup_codes(user_id);
         )"
         ,
         // Migration 4: Password categories and tags
@@ -151,6 +172,47 @@ private:
 
             CREATE INDEX idx_password_categories ON password_categories(password_id);
             CREATE INDEX idx_password_tags ON password_tags(password_id);
+        )"
+        ,
+        // Migration 5: Session and Security Enhancements
+        R"(
+            -- Session device tracking
+            CREATE TABLE user_devices (
+                id UUID PRIMARY KEY,
+                user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+                device_name VARCHAR(255),
+                device_type VARCHAR(50),
+                last_ip INET,
+                last_login TIMESTAMP WITH TIME ZONE,
+                is_trusted BOOLEAN DEFAULT FALSE,
+                created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+            );
+
+            -- Failed login tracking
+            CREATE TABLE failed_login_attempts (
+                id BIGSERIAL PRIMARY KEY,
+                user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+                ip_address INET,
+                attempt_time TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+                user_agent TEXT
+            );
+
+            -- Security events
+            CREATE TABLE security_events (
+                id UUID PRIMARY KEY,
+                user_id UUID REFERENCES users(id),
+                event_type VARCHAR(50) NOT NULL,
+                severity VARCHAR(20) NOT NULL,
+                description TEXT,
+                ip_address INET,
+                created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+            );
+
+            -- Indexes
+            CREATE INDEX idx_user_devices_user ON user_devices(user_id);
+            CREATE INDEX idx_failed_login_user_time ON failed_login_attempts(user_id, attempt_time);
+            CREATE INDEX idx_security_events_user ON security_events(user_id);
+            CREATE INDEX idx_security_events_type ON security_events(event_type);
         )"
     };
 };

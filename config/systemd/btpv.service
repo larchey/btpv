@@ -3,6 +3,8 @@
 Description=Baby Turtle Password Vault Server
 After=network.target postgresql.service
 Requires=postgresql.service
+StartLimitIntervalSec=300
+StartLimitBurst=5
 
 [Service]
 Type=simple
@@ -12,6 +14,16 @@ ExecStart=/usr/bin/btpv_server
 WorkingDirectory=/var/lib/btpv
 StandardOutput=append:/var/log/btpv/btpv.log
 StandardError=append:/var/log/btpv/btpv.error.log
+
+# Restart configuration
+Restart=on-failure
+RestartSec=30s
+
+# Resource limits
+LimitNOFILE=65535
+LimitNPROC=4096
+TasksMax=4096
+MemoryMax=2G
 
 # Security settings
 ProtectSystem=strict
@@ -24,6 +36,18 @@ ProtectKernelModules=yes
 ProtectControlGroups=yes
 RestrictAddressFamilies=AF_INET AF_INET6
 RestrictNamespaces=yes
+RestrictRealtime=yes
+ProtectClock=yes
+ProtectHostname=yes
+ProtectKernelLogs=yes
+ProtectProc=invisible
+RestrictSUIDSGID=yes
+RemoveIPC=yes
+PrivateUsers=yes
+
+# System call restrictions
+SystemCallFilter=@system-service
+SystemCallErrorNumber=EPERM
 
 [Install]
 WantedBy=multi-user.target
